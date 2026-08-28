@@ -41,6 +41,15 @@
 .check-row { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; }
 .check-row input { width: auto; accent-color: var(--accent); }
 .reel-generate { width: 100%; margin-top: 24px; }
+.reel-generate:disabled { cursor: wait; opacity: .65; transform: none; }
+.reel-result { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
+.result-status { color: var(--green); font-size: 12px; font-weight: 700; }
+.reel-result video { display: block; width: 100%; max-height: 420px; margin-top: 14px; background: #090a0c; border-radius: 8px; }
+.reel-result dl { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin: 17px 0; }
+.reel-result dl div { min-width: 0; }
+.reel-result dt { color: var(--faint); font-size: 10px; }
+.reel-result dd { overflow: hidden; margin: 4px 0 0; color: #d9dde5; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.reel-result .button { width: 100%; }
 .reel-preview { position: sticky; top: 24px; }
 .reel-canvas { display: grid; place-items: center; aspect-ratio: 9 / 16; max-height: 560px; margin: 14px auto; overflow: hidden; color: var(--faint); background: #090a0c; border: 1px solid var(--border); border-radius: 10px; text-align: center; }
 .reel-canvas img { width: 100%; height: 100%; object-fit: cover; }

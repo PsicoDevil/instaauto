@@ -113,7 +113,7 @@ function renderNavigation() {
 }
 
 function createLibraryViews() {
-    const views = `<section class="view" id="view-library" data-view-panel><div class="page-heading"><div><span class="eyebrow">ARCHIVOS LOCALES</span><h1>Biblioteca</h1><p>Contenido original disponible en tu espacio de trabajo.</p></div><span class="status-pill">Solo lectura</span></div><div class="library-tabs" role="tablist"><button class="library-tab active" data-library-tab="flyers">Flyers</button><button class="library-tab" data-library-tab="music">Música</button><button class="library-tab" data-library-tab="videos">Videos</button></div><div class="library-panel panel"><div class="library-heading"><div><span class="eyebrow" id="library-eyebrow">FLYERS</span><h2 id="library-title">Flyers originales</h2></div><span class="library-count" id="library-count">0 archivos</span></div><div id="library-content"></div></div></section><section class="view" id="view-reel" data-view-panel><div class="page-heading"><div><span class="eyebrow">FORMATO VERTICAL</span><h1>Crear Reel</h1><p>Prepará los elementos del Reel. El motor de generación estará disponible próximamente.</p></div></div><div class="reel-layout"><section class="panel reel-form"><div class="panel-heading"><div><h2>Configuración</h2><p class="panel-description">Elegí contenido de tu Biblioteca.</p></div><span class="draft-badge">Borrador</span></div><div class="reel-field"><label>Flyer</label><button class="picker-button" data-reel-pick="flyer"><span id="reel-flyer-name">Elegir flyer de Biblioteca</span><b>→</b></button></div><div class="reel-field"><label>Música</label><button class="picker-button" data-reel-pick="music"><span id="reel-music-name">Elegir música de Biblioteca</span><b>→</b></button></div><div class="reel-options"><div class="field"><label for="reel-format">Formato</label><select id="reel-format"><option>1080 × 1920</option></select></div><div class="field"><label for="reel-duration">Duración</label><select id="reel-duration"><option>5 segundos</option><option>8 segundos</option><option>10 segundos</option></select></div><div class="field"><label for="reel-animation">Animación</label><select id="reel-animation"><option>Zoom suave</option><option>Fade</option><option>Movimiento vertical</option></select></div><div class="field"><label for="reel-volume">Volumen <output id="reel-volume-value">80%</output></label><input id="reel-volume" type="range" min="0" max="100" value="80"></div><label class="check-row"><input id="reel-fade-in" type="checkbox"> Fade in</label><label class="check-row"><input id="reel-fade-out" type="checkbox"> Fade out</label></div><button class="button button-primary reel-generate" id="generate-reel">Generar Reel <span>→</span></button></section><aside class="panel reel-preview"><span class="eyebrow">VISTA PREVIA</span><div class="reel-canvas"><img id="reel-flyer-preview" alt="Flyer seleccionado" hidden><span id="reel-placeholder">Seleccioná un flyer para ver la preview</span></div><audio id="reel-audio" controls hidden></audio></aside></div></section>`;
+    const views = `<section class="view" id="view-library" data-view-panel><div class="page-heading"><div><span class="eyebrow">ARCHIVOS LOCALES</span><h1>Biblioteca</h1><p>Contenido original disponible en tu espacio de trabajo.</p></div><span class="status-pill">Solo lectura</span></div><div class="library-tabs" role="tablist"><button class="library-tab active" data-library-tab="flyers">Flyers</button><button class="library-tab" data-library-tab="music">Música</button><button class="library-tab" data-library-tab="videos">Videos</button></div><div class="library-panel panel"><div class="library-heading"><div><span class="eyebrow" id="library-eyebrow">FLYERS</span><h2 id="library-title">Flyers originales</h2></div><span class="library-count" id="library-count">0 archivos</span></div><div id="library-content"></div></div></section><section class="view" id="view-reel" data-view-panel><div class="page-heading"><div><span class="eyebrow">FORMATO VERTICAL</span><h1>Crear Reel</h1><p>Generá un MP4 vertical a partir de un flyer y una pista de tu Biblioteca.</p></div></div><div class="reel-layout"><section class="panel reel-form"><div class="panel-heading"><div><h2>Configuración</h2><p class="panel-description">Elegí contenido de tu Biblioteca.</p></div><span class="draft-badge">Borrador</span></div><div class="reel-field"><label>Flyer</label><button class="picker-button" data-reel-pick="flyer"><span id="reel-flyer-name">Elegir flyer de Biblioteca</span><b>→</b></button></div><div class="reel-field"><label>Música</label><button class="picker-button" data-reel-pick="music"><span id="reel-music-name">Elegir música de Biblioteca</span><b>→</b></button></div><div class="reel-options"><div class="field"><label for="reel-format">Formato</label><select id="reel-format"><option>1080 × 1920</option></select></div><div class="field"><label for="reel-duration">Duración</label><select id="reel-duration"><option value="5">5 segundos</option><option value="8">8 segundos</option><option value="10">10 segundos</option></select></div><div class="field"><label for="reel-animation">Animación</label><select id="reel-animation"><option>Zoom suave</option><option>Fade</option><option>Movimiento vertical</option></select></div><div class="field"><label for="reel-volume">Volumen <output id="reel-volume-value">80%</output></label><input id="reel-volume" type="range" min="0" max="100" value="80"></div><label class="check-row"><input id="reel-fade-in" type="checkbox"> Fade in</label><label class="check-row"><input id="reel-fade-out" type="checkbox"> Fade out</label></div><button class="button button-primary reel-generate" id="generate-reel">Generar Reel <span>→</span></button><div class="reel-result" id="reel-result" hidden><div class="result-status">Reel generado correctamente</div><video id="generated-reel-video" controls playsinline></video><dl><div><dt>Nombre</dt><dd id="generated-reel-name"></dd></div><div><dt>Duración</dt><dd id="generated-reel-duration"></dd></div><div><dt>Resolución</dt><dd>1080 × 1920</dd></div><div><dt>Tamaño</dt><dd id="generated-reel-size"></dd></div></dl><button class="button button-secondary" id="generate-another">Generar otro</button></div></section><aside class="panel reel-preview"><span class="eyebrow">VISTA PREVIA</span><div class="reel-canvas"><img id="reel-flyer-preview" alt="Flyer seleccionado" hidden><span id="reel-placeholder">Seleccioná un flyer para ver la preview</span></div><audio id="reel-audio" controls hidden></audio></aside></div></section>`;
     $(".page-container").insertAdjacentHTML("beforeend", views);
     $("#upload-empty").insertAdjacentHTML("beforeend", '<button class="inline-button library-image-button" id="choose-library-image">Elegir de Biblioteca</button>');
     document.body.insertAdjacentHTML("beforeend", '<div class="media-modal" id="media-modal" hidden><div class="media-modal-inner"><button class="modal-close" id="close-media-modal" aria-label="Cerrar">×</button><img id="modal-image" alt="Vista previa ampliada"></div></div>');
@@ -174,9 +174,42 @@ function updateReelPreview() {
 function selectReelFlyer(url, name) { state.reel.flyer = { url, name }; $("#reel-flyer-name").textContent = name; updateReelPreview(); navigate("reel"); }
 function selectReelMusic(url, name) { state.reel.music = { url, name }; $("#reel-music-name").textContent = name; updateReelPreview(); navigate("reel"); }
 
+function renderGeneratedReel(data) {
+    $("#generated-reel-video").src = data.url;
+    $("#generated-reel-name").textContent = data.name;
+    $("#generated-reel-duration").textContent = `${data.duration} segundos`;
+    $("#generated-reel-size").textContent = formatBytes(data.size);
+    $("#reel-result").hidden = false;
+}
+
+async function generateReel() {
+    if (!state.reel.flyer || !state.reel.music) { showToast("Elegí un flyer y una música", "error"); return; }
+    const button = $("#generate-reel");
+    button.disabled = true;
+    button.textContent = "Generando Reel...";
+    try {
+        const response = await fetch("/api/reels/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ flyer: state.reel.flyer.name, music: state.reel.music.name, duration: Number($("#reel-duration").value) }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "No se pudo generar el Reel");
+        renderGeneratedReel(data);
+        showToast("Reel generado correctamente");
+    } catch (error) { showToast(error.message, "error"); }
+    finally { button.disabled = false; button.innerHTML = "Generar Reel <span>→</span>"; }
+}
+
+function resetReel() {
+    state.reel.flyer = null; state.reel.music = null;
+    $("#reel-flyer-name").textContent = "Elegir flyer de Biblioteca";
+    $("#reel-music-name").textContent = "Elegir música de Biblioteca";
+    $("#reel-result").hidden = true;
+    $("#generated-reel-video").removeAttribute("src");
+    updateReelPreview();
+}
+
 function bindLibraryEvents() {
     $("#choose-library-image").addEventListener("click", () => { navigate("library"); renderLibrary("flyers"); });
-    $("#generate-reel").addEventListener("click", () => showToast("Motor de generación próximamente.", "info"));
+    $("#generate-reel").addEventListener("click", generateReel);
+    $("#generate-another").addEventListener("click", resetReel);
     $$('[data-reel-pick]').forEach((button) => button.addEventListener("click", () => { navigate("library"); loadLibrary(button.dataset.reelPick === "flyer" ? "flyers" : "music"); }));
     $("#reel-volume").addEventListener("input", (event) => { $("#reel-volume-value").textContent = `${event.target.value}%`; if (state.reel.music) $("#reel-audio").volume = event.target.value / 100; });
     $("[data-library-tab]").parentElement.addEventListener("click", (event) => { const tab = event.target.closest("[data-library-tab]"); if (tab) loadLibrary(tab.dataset.libraryTab); });
