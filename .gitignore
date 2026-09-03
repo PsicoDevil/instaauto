@@ -4,3 +4,5 @@ uploads/
 data/uploads/
 data/generated/
 tools/ffmpeg/
+data/app/*.json
+!data/app/.gitkeep
