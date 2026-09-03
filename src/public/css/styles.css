@@ -9,6 +9,10 @@
 .library-card { overflow: hidden; background: var(--surface-raised); border: 1px solid var(--border); border-radius: 10px; }
 .media-preview-button { display: block; width: 100%; padding: 0; border: 0; background: #090a0c; cursor: zoom-in; }
 .media-preview-button img, .library-card > video { display: block; width: 100%; height: 180px; object-fit: cover; }
+.reel-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.reel-card > video { height: auto; aspect-ratio: 9 / 16; object-fit: contain; background: #090a0c; }
+.reel-play-button { width: 100%; margin-top: 13px; }
+.library-empty { display: grid; justify-items: center; gap: 14px; }
 .library-card-body { padding: 14px; }
 .library-card-body strong, .library-card-body span, .library-card-body small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .library-card-body strong { font-size: 12px; }

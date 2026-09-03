@@ -96,9 +96,42 @@ function runFfmpeg(args) {
     });
 }
 
+function runFfprobe(args) {
+    return new Promise((resolve, reject) => {
+        const process = spawn(toolConfig.ffprobePath, args, { windowsHide: true });
+        let stdout = "";
+        let stderr = "";
+        process.stdout.on("data", (chunk) => { stdout += chunk.toString(); });
+        process.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+        process.on("error", reject);
+        process.on("close", (code) => {
+            if (code !== 0) return reject(new Error(stderr.slice(-1000) || `FFprobe terminó con código ${code}`));
+            try { resolve(JSON.parse(stdout)); } catch (error) { reject(error); }
+        });
+    });
+}
+
 function generatedName() {
     const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
     return `reel-${stamp}-${crypto.randomBytes(3).toString("hex")}.mp4`;
+}
+
+async function readGeneratedReels() {
+    const entries = await fs.promises.readdir(generatedRoot, { withFileTypes: true });
+    const reels = await Promise.all(entries.filter((entry) => entry.isFile() && path.extname(entry.name).toLowerCase() === ".mp4").map(async (entry) => {
+        const filePath = path.join(generatedRoot, entry.name);
+        const stats = await fs.promises.stat(filePath);
+        let metadata = {};
+        try {
+            const probe = await runFfprobe(["-v", "error", "-show_entries", "format=duration", "-show_entries", "stream=codec_type,width,height", "-of", "json", filePath]);
+            const video = probe.streams?.find((stream) => stream.codec_type === "video");
+            metadata = { duration: Number(probe.format?.duration), width: video?.width, height: video?.height };
+        } catch (error) {
+            console.error("No se pudo leer metadata del Reel:", entry.name, error.message);
+        }
+        return { filename: entry.name, url: `/media/generated/reels/${encodeURIComponent(entry.name)}`, size: stats.size, createdAt: stats.birthtime.toISOString(), ...metadata };
+    }));
+    return reels.sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
 }
 
 app.get("/api/library/:category", async (req, res) => {
@@ -184,5 +217,15 @@ app.get("/media/generated/reels/:filename", async (req, res) => {
         res.sendFile(filePath);
     } catch (error) {
         res.status(404).end();
+    }
+});
+
+app.get("/api/reels", async (req, res) => {
+    try {
+        res.json(await readGeneratedReels());
+    } catch (error) {
+        if (error.code === "ENOENT") return res.json([]);
+        console.error("No se pudo leer los Reels generados:", error.message);
+        res.status(500).json({ error: "No se pudo leer los Reels generados" });
     }
 });
