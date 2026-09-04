@@ -464,7 +464,7 @@ app.post("/api/reels/generate", async (req, res) => {
     if (fadeIn) audioFilters.push(`afade=t=in:st=0:d=${audioFadeDuration}`);
     if (fadeOut) audioFilters.push(`afade=t=out:st=${Math.max(0, requestedDuration - audioFadeDuration)}:d=${audioFadeDuration}`);
     try {
-        await runFfmpeg(["-y", "-loop", "1", "-i", flyerPath, "-stream_loop", "-1", "-ss", String(requestedStart), "-i", musicPath, "-filter_complex", filter, "-map", "[v]", "-map", "1:a:0", "-af", audioFilters.join(","), "-t", String(requestedDuration), "-r", "30", "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", outputPath]);
+        await runFfmpeg(["-y", "-loop", "1", "-framerate", "30", "-i", flyerPath, "-stream_loop", "-1", "-ss", String(requestedStart), "-i", musicPath, "-filter_complex", filter, "-map", "[v]", "-map", "1:a:0", "-af", audioFilters.join(","), "-t", String(requestedDuration), "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", outputPath]);
         const stats = await fs.promises.stat(outputPath);
         if (!stats.isFile() || stats.size === 0) throw new Error("El archivo generado no existe o está vacío");
         const result = { name: filename, url: `/media/generated/reels/${encodeURIComponent(filename)}`, duration: requestedDuration, size: stats.size };
