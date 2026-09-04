@@ -24,8 +24,8 @@ const libraryConfig = {
     music: { directory: "music", extensions: [".mp3", ".wav", ".m4a"] },
     videos: { directory: "videos", extensions: [".mp4", ".mov", ".webm"] }
 };
-const reelDurations = [5, 8, 10];
-const reelAnimations = ["Zoom suave", "Fade", "Movimiento vertical"];
+const reelDurations = [5, 10, 15, 20, 30, 45, 60];
+const reelAnimations = ["Sin animación", "Zoom suave", "Fade", "Movimiento vertical"];
 let reelGenerationInProgress = false;
 const postStatuses = ["draft", "scheduled", "ready", "pending", "published", "failed"];
 const postTypes = ["image", "reel"];
@@ -205,6 +205,12 @@ function runFfprobe(args) {
             try { resolve(JSON.parse(stdout)); } catch (error) { reject(error); }
         });
     });
+}
+
+async function getMediaDuration(filePath) {
+    const probe = await runFfprobe(["-v", "error", "-show_entries", "format=duration", "-of", "json", filePath]);
+    const duration = Number(probe.format?.duration);
+    return Number.isFinite(duration) && duration > 0 ? duration : null;
 }
 
 function generatedName() {
@@ -416,15 +422,26 @@ Promise.all([ensureJsonFile(postsFile, []), ensureJsonFile(historyFile, [])]).th
 
 app.post("/api/reels/generate", async (req, res) => {
     if (reelGenerationInProgress) return apiError(res, 409, "Ya hay una generación en curso");
-    const { flyer, music, duration, volume = 100, fadeIn = false, fadeOut = false, animation = "Zoom suave" } = req.body || {};
+    const { flyer, music, duration, start = 0, volume = 100, fadeIn = false, fadeOut = false, animation = "Zoom suave" } = req.body || {};
     const requestedDuration = Number(duration);
+    const requestedStart = Number(start);
     const requestedVolume = Number(volume);
     if (!reelDurations.includes(requestedDuration)) return apiError(res, 400, "Duración inválida");
+    if (!Number.isFinite(requestedStart) || requestedStart < 0) return apiError(res, 400, "Inicio de audio inválido");
     if (!Number.isFinite(requestedVolume) || requestedVolume < 0 || requestedVolume > 100) return apiError(res, 400, "Volumen inválido");
     if (!reelAnimations.includes(animation) || typeof fadeIn !== "boolean" || typeof fadeOut !== "boolean") return apiError(res, 400, "Configuración de Reel inválida");
     const [flyerPath, musicPath] = await Promise.all([resolveUpload(flyer, "flyers"), resolveUpload(music, "music")]);
     if (!flyerPath) return apiError(res, 404, "Flyer inexistente o inválido");
     if (!musicPath) return apiError(res, 404, "Música inexistente o inválida");
+    let musicDuration;
+    try {
+        musicDuration = await getMediaDuration(musicPath);
+    } catch (error) {
+        console.error("No se pudo leer la duración de la música:", error.message);
+        return apiError(res, 400, "La música no se puede procesar");
+    }
+    if (!musicDuration || requestedStart >= musicDuration) return apiError(res, 400, "El inicio de audio supera la duración de la música");
+    if (musicDuration > requestedDuration && requestedStart + requestedDuration > musicDuration) return apiError(res, 400, "El fragmento de audio excede la duración de la música");
     try {
         await fs.promises.mkdir(generatedRoot, { recursive: true });
         await fs.promises.access(toolConfig.ffmpegPath, fs.constants.X_OK);
@@ -435,14 +452,19 @@ app.post("/api/reels/generate", async (req, res) => {
     const filename = generatedName();
     const outputPath = path.resolve(generatedRoot, filename);
     reelGenerationInProgress = true;
-    const videoFilters = [];
-    if (animation === "Fade") videoFilters.push("fade=t=in:st=0:d=0.5", `fade=t=out:st=${Math.max(0, requestedDuration - 0.5)}:d=0.5`);
-    const filter = `[0:v]split=2[background][foreground];[background]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:2[blurred];[foreground]scale=1080:1920:force_original_aspect_ratio=decrease[sharp];[blurred][sharp]overlay=(W-w)/2:(H-h)/2,${videoFilters.length ? `${videoFilters.join(",")},` : ""}format=yuv420p[v]`;
+    const animationFilter = animation === "Zoom suave"
+        ? `zoompan=z='min(zoom+0.0015,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30`
+        : animation === "Movimiento vertical"
+            ? `zoompan=z=1.05:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*on/(30*${requestedDuration})':d=1:s=1080x1920:fps=30`
+            : "";
+    const visualFade = animation === "Fade" ? `fade=t=in:st=0:d=${Math.min(0.5, requestedDuration / 2)},fade=t=out:st=${Math.max(0, requestedDuration - Math.min(0.5, requestedDuration / 2))}:d=${Math.min(0.5, requestedDuration / 2)},` : "";
+    const filter = `[0:v]split=2[background][foreground];[background]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:2[blurred];[foreground]scale=1080:1920:force_original_aspect_ratio=decrease[sharp];[blurred][sharp]overlay=(W-w)/2:(H-h)/2,format=yuv420p[base];[base]${animationFilter ? `${animationFilter},` : ""}${visualFade}format=yuv420p[v]`;
+    const audioFadeDuration = Math.min(2, requestedDuration / 2);
     const audioFilters = [`volume=${requestedVolume / 100}`];
-    if (fadeIn) audioFilters.push("afade=t=in:st=0:d=0.5");
-    if (fadeOut) audioFilters.push(`afade=t=out:st=${Math.max(0, requestedDuration - 0.5)}:d=0.5`);
+    if (fadeIn) audioFilters.push(`afade=t=in:st=0:d=${audioFadeDuration}`);
+    if (fadeOut) audioFilters.push(`afade=t=out:st=${Math.max(0, requestedDuration - audioFadeDuration)}:d=${audioFadeDuration}`);
     try {
-        await runFfmpeg(["-y", "-loop", "1", "-i", flyerPath, "-stream_loop", "-1", "-i", musicPath, "-filter_complex", filter, "-map", "[v]", "-map", "1:a:0", "-af", audioFilters.join(","), "-t", String(requestedDuration), "-r", "30", "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", outputPath]);
+        await runFfmpeg(["-y", "-loop", "1", "-i", flyerPath, "-stream_loop", "-1", "-ss", String(requestedStart), "-i", musicPath, "-filter_complex", filter, "-map", "[v]", "-map", "1:a:0", "-af", audioFilters.join(","), "-t", String(requestedDuration), "-r", "30", "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", outputPath]);
         const stats = await fs.promises.stat(outputPath);
         if (!stats.isFile() || stats.size === 0) throw new Error("El archivo generado no existe o está vacío");
         const result = { name: filename, url: `/media/generated/reels/${encodeURIComponent(filename)}`, duration: requestedDuration, size: stats.size };
