@@ -33,9 +33,15 @@ const schedulerIntervalMs = 30000;
 const uploadLimits = { fileSize: 50 * 1024 * 1024, files: 1 };
 const uploadMimeTypes = {
     flyers: ["image/jpeg", "image/png", "image/webp"],
+    music: ["audio/mpeg", "audio/wav", "audio/mp4", "audio/aac", "audio/ogg"],
     videos: ["video/mp4", "video/quicktime"]
 };
-const uploadExtensions = { flyers: [".jpg", ".jpeg", ".png", ".webp"], videos: [".mp4", ".mov"] };
+
+const uploadExtensions = {
+    flyers: [".jpg", ".jpeg", ".png", ".webp"],
+    music: [".mp3", ".wav", ".m4a", ".aac", ".ogg"],
+    videos: [".mp4", ".mov"]
+};
 const upload = multer({ storage: multer.memoryStorage(), limits: uploadLimits });
 
 app.use(express.json());

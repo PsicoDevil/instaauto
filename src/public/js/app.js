@@ -259,7 +259,11 @@ function resetReel() {
 
 function bindLibraryEvents() {
     $("#choose-library-image").addEventListener("click", () => { navigate("library"); renderLibrary("flyers"); });
-    $("#upload-library").addEventListener("click", () => { if (!["flyers", "videos"].includes(state.libraryCategory)) { showToast("Seleccioná Flyers o Videos para subir un archivo", "error"); return; } $("#library-upload-input").accept = state.libraryCategory === "flyers" ? ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" : ".mp4,.mov,video/mp4,video/quicktime"; $("#library-upload-input").click(); });
+    $("#upload-library").addEventListener("click", () => { if (!["flyers", "music", "videos"].includes(state.libraryCategory)) { showToast("Seleccioná Flyers o Videos para subir un archivo", "error"); return; } $("#library-upload-input").accept = state.libraryCategory === "flyers"
+    ? ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+    : state.libraryCategory === "music"
+        ? ".mp3,.wav,.m4a,.aac,.ogg,audio/mpeg,audio/wav,audio/mp4,audio/aac,audio/ogg"
+        : ".mp4,.mov,video/mp4,video/quicktime"; $("#library-upload-input").click(); });
     $("#library-upload-input").addEventListener("change", async (event) => { const file = event.target.files[0]; if (!file) return; try { const formData = new FormData(); formData.append("category", state.libraryCategory); formData.append("file", file); const response = await fetch("/api/uploads", { method: "POST", body: formData }); const data = await response.json(); if (!response.ok) throw new Error(data.error || "No se pudo subir el archivo"); await loadLibrary(state.libraryCategory); showToast("Archivo cargado correctamente"); } catch (error) { showToast(error.message, "error"); } finally { event.target.value = ""; } });
     $("#generate-reel").addEventListener("click", generateReel);
     $("#generate-another").addEventListener("click", resetReel);
